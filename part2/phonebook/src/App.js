@@ -1,19 +1,18 @@
 import { useState, useEffect} from 'react'
-import axios from 'axios'
+
 import Filter from './components/Filter'
 import PersonForm from './components/PersonForm'
 import Persons from './components/Persons'
-
+import personService from './service/person'
 
 const App = () => {
   const [persons, setPersons] = useState([])
 
   const hook = () => {
-    axios
-      .get('http://localhost:3001/persons')
-      .then((res) => {
-        setPersons(res.data)
-      })
+    personService
+      .getAll()
+      .then(initPeople => setPersons(initPeople))
+      .catch(err => alert('fail'))
   }
 
   useEffect(hook, [])
@@ -29,11 +28,27 @@ const App = () => {
 
   const handleQueryChange = (event) => setQuery(event.target.value)
 
+  const onDeleteClick = (event) => {
+    const personToDel = persons.find((p) => p.id === Number.parseInt(event.target.value))
+
+    if (window.confirm(`Delete contact ${personToDel.name}`)) {
+      personService.remove(event.target.value)
+      setPersons(persons.filter((p) => p.id !== Number.parseInt(event.target.value)))
+    }
+  }
+  
   const addPerson = (event) => {
     event.preventDefault()
-
+    
     if (persons.find((p) => p.name === newName)) {
-      alert(`${newName} is already added to phonebook`)
+      if (window.confirm(`${newName} is already added to phonebook, replace the old number with a new one?`)) {
+        const personToPut = persons.find((p) => p.name === newName)
+        personService.update(personToPut.id, {...personToPut, number : newNumber})
+        
+        const updatedPersons = [...persons]
+        updatedPersons.find((p) => p.name === newName).number = newNumber
+        setPersons(updatedPersons)
+      }
       return;
     }
 
@@ -41,8 +56,11 @@ const App = () => {
       name : newName,
       number : newNumber
     }
-    setPersons(persons.concat(nameObject))
-    setNewName('')
+    
+    personService
+      .create(nameObject)
+      .then(returnedPerson => setPersons(persons.concat(returnedPerson)))
+      .catch(err => alert('fail'))
   }
 
   const peopleToShow = query === '' ? persons : persons.filter((p) => {
@@ -58,7 +76,7 @@ const App = () => {
       <PersonForm onSubmit = {addPerson} onNameChange = {handleNameChange} onNumberChange = {handleNumberChange}></PersonForm>
       
       <h2>Numbers</h2>
-      <Persons people = {peopleToShow}></Persons>
+      <Persons people = {peopleToShow} onDeleteClick={onDeleteClick}></Persons>
     </div>
   )
 }
