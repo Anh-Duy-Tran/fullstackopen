@@ -1,10 +1,6 @@
 import OneResult from "./OneResult";
 
-const Results = ({ countriesToShow, choice, setChoice }) => {
-  const handleClick = (e) => {
-    setChoice(Number.parseInt(e.target.value))
-  }
-
+const Results = ({ countriesToShow, choice, handleClick}) => {
   if (countriesToShow === null) {
     return
   }
@@ -21,15 +17,13 @@ const Results = ({ countriesToShow, choice, setChoice }) => {
 
   return (
     <>
-      {countriesToShow.map((c, i) => {
-        return (
+      {countriesToShow.map((c, i) =>
         <div key = {i}>
           <div>
             {c.name.common} <button onClick={handleClick} value = {i}>Show</button>
           </div>
           {choice === i ? <OneResult country={c}></OneResult> : <></>}
         </div>
-      )}
       )}
     </>
   )

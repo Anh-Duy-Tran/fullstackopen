@@ -14,6 +14,10 @@ function App() {
       .get('https://restcountries.com/v3.1/all')
       .then((res) => setCountries(res.data))
   }
+
+  const handleClick = (e) => {
+    setChoice(Number.parseInt(e.target.value))
+  }
   
   useEffect(hook, [])
   const handleChange = (e) => {
@@ -29,7 +33,7 @@ function App() {
     <>
       <div>Find countries <input onChange={handleChange}></input></div>
       <div>
-        <Results countriesToShow={countriesToShow} choice = {choice} setChoice = {setChoice}></Results>
+        <Results countriesToShow={countriesToShow} choice = {choice} setChoice = {setChoice} handleClick = {handleClick}></Results>
       </div>
     </>  
   )
