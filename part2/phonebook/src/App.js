@@ -3,6 +3,7 @@ import { useState, useEffect} from 'react'
 import Filter from './components/Filter'
 import PersonForm from './components/PersonForm'
 import Persons from './components/Persons'
+import Notification from './components/Notification'
 import personService from './service/person'
 
 const App = () => {
@@ -20,6 +21,9 @@ const App = () => {
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [query, setQuery] = useState('')
+
+  const [error, setError] = useState(null)
+  const [message, setMessage] = useState('')
 
 
   const handleNameChange = (event) => setNewName(event.target.value)
@@ -59,8 +63,15 @@ const App = () => {
     
     personService
       .create(nameObject)
-      .then(returnedPerson => setPersons(persons.concat(returnedPerson)))
-      .catch(err => alert('fail'))
+      .then(returnedPerson => {
+        setPersons(persons.concat(returnedPerson))
+        setError(false)
+        setMessage(`Added ${nameObject.name}`)
+      })
+      .catch(err => {
+        setError(true)
+        setMessage(`Error while adding contact`)
+      })
   }
 
   const peopleToShow = query === '' ? persons : persons.filter((p) => {
@@ -70,6 +81,7 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification state = {error} message={message}></Notification>
       <Filter inputOnChange = {handleQueryChange}></Filter>
       
       <h2>Add a new</h2>
