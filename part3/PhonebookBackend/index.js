@@ -44,9 +44,11 @@ app.get('/info', async (req, res) => {
 })
 
 app.get('/api/persons/:id', (req, res) => {
-  Person.findById(req.params.id).then(person => {
-    res.json(PaymentResponse)
-  })
+  Person
+    .findById(req.params.id)
+    .then(person => {
+      res.json(person)
+    })
 })
 
 app.delete('/api/persons/:id', async (req, res) => {
