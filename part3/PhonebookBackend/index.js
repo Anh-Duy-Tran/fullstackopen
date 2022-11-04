@@ -1,7 +1,9 @@
 const express = require('express')
 const morgan = require('morgan')
+const cors = require('cors')
 
-const PORT = 3001
+
+
 const app = express()
 
 let persons = [
@@ -32,6 +34,8 @@ const getNewId = () => {
   return Math.floor(Math.random() * maxId)
 }
 
+app.use(cors())
+app.use(express.static('build'))
 app.use(express.json())
 app.use(morgan((tokens, req, res) => {
   return [
@@ -101,4 +105,7 @@ const unknownEndpoint = (req, res) => {
 
 app.use(unknownEndpoint)
 
-app.listen(PORT)
+const PORT = process.env.PORT || 3001
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`)
+})
