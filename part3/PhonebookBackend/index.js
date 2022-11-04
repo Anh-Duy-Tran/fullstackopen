@@ -1,102 +1,81 @@
 const express = require('express')
-const morgan = require('morgan')
 const cors = require('cors')
 
-
+const Person = require('./models/person')
 
 const app = express()
 
-let persons = [
-  { 
-    "id": 1,
-    "name": "Arto Hellas", 
-    "number": "040-123456"
-  },
-  { 
-    "id": 2,
-    "name": "Ada Lovelace", 
-    "number": "39-44-5323523"
-  },
-  { 
-    "id": 3,
-    "name": "Dan Abramov", 
-    "number": "12-43-234345"
-  },
-  { 
-    "id": 4,
-    "name": "Mary Poppendieck", 
-    "number": "39-23-6423122"
-  }
-]
-
-const maxId = 9999
-const getNewId = () => {
-  return Math.floor(Math.random() * maxId)
+const requestLogger = (request, response, next) => {
+  console.log('Method:', request.method)
+  console.log('Path:  ', request.path)
+  console.log('Body:  ', request.body)
+  console.log('---')
+  next()
 }
 
-app.use(cors())
-app.use(express.static('build'))
 app.use(express.json())
-app.use(morgan((tokens, req, res) => {
-  return [
-    tokens.method(req, res),
-    tokens.url(req, res),
-    tokens.status(req, res),
-    tokens.res(req, res, 'content-length'), '-',
-    tokens['response-time'](req, res), 'ms',
-    JSON.stringify(req.body)
-  ].join(' ')
-}))
+
+app.use(requestLogger)
+
+app.use(cors())
+
+app.use(express.static('build'))
+
 
 app.get('/api/persons', (req, res) => {
-  res.json(persons).end()
+  Person.find({}).then(persons => {
+    res.send(persons)
+  })
 })
 
-app.get('/info', (req, res) => {
+app.get('/info', async (req, res) => {
   const currentDate = new Date().toLocaleString();
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
+  const personsNum = (await Person.find({})).length
+
   res.send(`
     <div>
-      <p>Phonebook has info for ${persons.length} people</p>
+      <p>Phonebook has info for ${personsNum} people</p>
     </div>
     <div>
       <p>${currentDate} (${timeZone})</p>
     </div>
   `).end()
-  
 })
 
 app.get('/api/persons/:id', (req, res) => {
-  const id = Number(req.params.id);
-  const person = persons.find(p => p.id === id)
-
-  person ? res.json(person) : res.status(404)
-  res.end()
+  Person.findById(req.params.id).then(person => {
+    res.json(PaymentResponse)
+  })
 })
 
-app.delete('/api/persons/:id', (req, res) => {
-  const id = Number(req.params.id);
-  const personIndex = persons.findIndex(p => p.id === id)
-  personIndex !== -1 ? persons.splice(personIndex, 1) : res.status(404)
-  res.end()
+app.delete('/api/persons/:id', async (req, res) => {
+  Person
+    .findByIdAndDelete(req.params.id)
+    .then(deleted => res.json(deleted))
+    .catch(console.log)
 })
 
 app.post('/api/persons', (req, res) => {
   const person = req.body
-  if (persons.some(p => p.name === person.name)) {
-    res.status(400).json({ error: 'name must be unique' }).end()
-    return;
-  }
-  if (person.name === undefined || person.name.length === 0 
-    || person.number === undefined || person.number.length === 0) {
-    res.status(400).json({ error: 'the name or number is missing' }).end()
-    return;
+  
+  if (person === undefined) {
+    return res.status(400).json({ error: 'content missing' })
   }
 
-  const newPerson = {id : getNewId(), ...person}
-  persons.push(newPerson)
+  const newPerson = new Person({...person})
 
-  res.json(newPerson)
+  newPerson.save().then(saved => res.json(saved))
+})
+
+app.put('/api/persons/:id', (req, res) => {
+  const person = req.body
+
+  if (person === undefined) {
+    return res.status(400).json({ error: 'content missing' })
+  }
+
+  Person.findByIdAndUpdate(req.params.id, person).then(updated => res.json(updated))
 })
 
 const unknownEndpoint = (req, res) => {

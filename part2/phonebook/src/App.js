@@ -33,21 +33,20 @@ const App = () => {
   const handleQueryChange = (event) => setQuery(event.target.value)
 
   const onDeleteClick = (event) => {
-    const personToDel = persons.find((p) => p.id === Number.parseInt(event.target.value))
-
-    if (window.confirm(`Delete contact ${personToDel.name}`)) {
+    if (window.confirm(`Delete contact ${event.target.name}`)) {
       personService.remove(event.target.value)
-      setPersons(persons.filter((p) => p.id !== Number.parseInt(event.target.value)))
+      setPersons(persons.filter(p => p._id !== event.target.value)) 
     }
   }
   
   const addPerson = (event) => {
     event.preventDefault()
-    
+
     if (persons.find((p) => p.name === newName)) {
       if (window.confirm(`${newName} is already added to phonebook, replace the old number with a new one?`)) {
         const personToPut = persons.find((p) => p.name === newName)
-        personService.update(personToPut.id, {...personToPut, number : newNumber})
+
+        personService.update(personToPut._id, {...personToPut, number : newNumber})
         
         const updatedPersons = [...persons]
         updatedPersons.find((p) => p.name === newName).number = newNumber
