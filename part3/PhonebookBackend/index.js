@@ -43,12 +43,18 @@ app.get('/info', async (req, res) => {
   `).end()
 })
 
-app.get('/api/persons/:id', (req, res) => {
+app.get('/api/persons/:id', (req, res, next) => {
   Person
     .findById(req.params.id)
     .then(person => {
-      res.json(person)
+      if (person) {
+        res.json(person)
+      }
+      else {
+        res.status(404).end()
+      }
     })
+    .catch(err => next(err))
 })
 
 app.delete('/api/persons/:id', async (req, res) => {
@@ -85,6 +91,18 @@ const unknownEndpoint = (req, res) => {
 }
 
 app.use(unknownEndpoint)
+
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message)
+
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformatted id' })
+  } 
+
+  next(error)
+}
+
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
